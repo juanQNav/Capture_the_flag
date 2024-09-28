@@ -9,6 +9,9 @@
 \usepackage{float}
 \usepackage [autostyle=true, english = american]{csquotes}
 \usepackage{enumitem}
+\usepackage{url}
+\usepackage{hyperref}
+
 \newenvironment{QandA}{\begin{enumerate}\bfseries}
                       {\end{enumerate}}
 \newenvironment{answered}{\par\normalfont}{}
@@ -31,67 +34,98 @@
 \begin{document}
 \maketitle
 
+\begin{abstract}
+  Este documento presenta las soluciones a los desafíos de Capture The Flag (CTF) Coding100, Coding200, Coding300 y Coding500. Se describen las soluciones implementadas para resolver cada reto, que incluyen búsqueda de palabras en una cuadrícula, exploración de rutas mediante búsqueda en anchura (BFS), restauración de imágenes esteganografiadas y desarrollo de un intérprete para un lenguaje específico. Cada desafío culmina en la obtención de una bandera. Las soluciones completas están disponibles en un repositorio de GitHub.
+\end{abstract}
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\linewidth]{./total.png}
   \caption{}
 \end{figure}
 
-
+\newpage
 \section*{Coding 100}
 
-Para encontrar las palabras, para cada una se checa cada celda de la cuadricula. Si conincide con la primera letra de la palabra, empieza un proceso de busqueda en todas las direcciones. Si la direccion no es valida, queda fuera de la cuadricula, o la letra no coincide con la siguiente de la palabra se termina esa busqueda. Para el patrón de L, si no se ha echo un cambio de dirección y la dirección actual no es diagonal, se checa realiza la busqueda tambien en las direcciones perpendiculares. Si se llega al final de la palabra, se marca cada posición recorrida. Una vez hecho para cada palabra, se eliminan las celdas marcadas y se obtiene la contraseña.
+Para encontrar las palabras, para cada una se checa cada celda de la cuadricula. Si coincide con la primera letra de la palabra, empieza un proceso de búsqueda en todas las direcciones. Si la dirección no es valida, queda fuera de la cuadricula, o la letra no coincide con la siguiente de la palabra se termina esa búsqueda. Para el patrón de L, si no se ha echo un cambio de dirección y la dirección actual no es diagonal, se checa realiza la búsqueda también en las direcciones perpendiculares. Si se llega al final de la palabra, se marca cada posición recorrida. Una vez hecho para cada palabra, se eliminan las celdas marcadas y se obtiene la contraseña.
 
-Bandera: \{FLG:c0n9r4t5\_3\_3nj0y\_th3\_4dv3ntur3\}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{100.png}
-  \caption{}
+  \caption{flag: \{FLG:c0n9r4t5\_3\_3nj0y\_th3\_4dv3ntur3\}}
 \end{figure}
 
-
-
 \section*{Coding 200}
-Bandera: 
+Para resolver este problema, se implementó una búsqueda en anchura (BFS) para explorar las rutas desde el inicio hasta el final. Las estrategias clave fueron:
+\begin{enumerate}
+  \item \textbf{Cargar el mapa}: Se identificaron las posiciones de inicio ('A'), final ('B') y portales, almacenando sus posiciones gemelas.
+
+  \item \textbf{Simulación del mapa}: En cada paso, las celdas se actualizaban dinámicamente según el número de agujeros negros a su alrededor, afectando también a los portales.
+
+  \item \textbf{Portales y teletransporte}: Los portales permitían teletransportarse a su gemelo instantáneamente, pero se desactivaban tras su uso, por lo que había que calcular su uso óptimo.
+
+  \item \textbf{Optimización de ruta}: Se priorizaron las rutas más cortas y aquellas que utilizaban más portales, ordenándolas lexicográficamente en caso de empate.
+
+  \item \textbf{Salida}: La contraseña para la solución final tenía el formato N-s-P, donde N es el número de rutas óptimas, s es la concatenación ordenada de las rutas, y P el número de portales usados.
+\end{enumerate}
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{200.png}
-  \caption{}
+  \caption{flag: \{FLG:4v0Id1N6\_bL4Ck\_h0l35\_c4N\_b3\_7r1cKy\}}
 \end{figure}
+
 \section*{Coding 300}
-Bandera: 
+Para este desafío, se implementó un script que sigue los siguientes puntos clave:
+\begin{enumerate}
+  \item \textbf{Cargar la imagen inicial}: El programa lee una imagen que contiene un mensaje esteganografiado. Este mensaje se descifra utilizando la librería stepic para obtener una semilla (seed).
+
+  \item \textbf{Desordenar y restaurar píxeles}: Con la semilla obtenida, se utiliza numpy para reproducir el desorden de píxeles original y luego invertirlo, restaurando la imagen correcta.
+
+  \item \textbf{Rotación de sub-bloques}: La imagen se divide en 16 bloques. Cada bloque contiene un mensaje binario esteganografiado, que indica cuánto ha sido rotado el bloque y su posición original. Los bloques se reorganizan y rotan a su estado correcto.
+
+  \item \textbf{Reconstruir un puzzle Sudoku}: Una vez restaurada la imagen, se extraen los números que conforman un puzzle Sudoku de 16x16. Estos números se obtienen usando OCR (reconocimiento óptico de caracteres) mediante pytesseract.
+
+  \item \textbf{Resolver el Sudoku}: Con los números extraídos, se resuelve el puzzle utilizando la librería Sudoku. La solución se concatena para formar una contraseña.
+
+  \item \textbf{Descomprimir archivos}: La contraseña se usa para extraer el siguiente archivo ZIP, continuando con el siguiente nivel del juego.
+\end{enumerate}
+Este proceso se repite hasta que no se puedan extraer más niveles.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{300.png}
-  \caption{}
+  \caption{Flag: \{FLG:rE9EnEr4T3\_My\_me5sy\_sud0Ku\}}
 \end{figure}
 \section*{Coding 500}
 Para poder hacer el interprete, primero se analizaron los ejemplos para determinar el significado de cada expresión.
 
 \begin{itemize}
-	\item El lenguaje obtenido fue el siguiente:
-	\item Las expresiones son leidas de izquierda a derecha.
-	\item Los objetos "STRINGS" comienzan con "B", con cada caracter separado por una 'b', y en orden inverso.
-	\item Los objetos "INTEGERS" comienzan con "N" y pueden formarse por una operación aritmética, donde cada elemento se separa por un operador: la 'a' es suma, la 'm' es multiplicación, la 'd' es división, y la 's' es resta.
-	\item La operacióñ "PRINT" se indica con una 'P', y se imprime el valor de la siguiente expresión.
-	\item Las varaibles se declaran con una 'V', seguido de un nombre de variable, con cada caracter separado por una 'r' y en orden inverso. Si es precedida por un '=', se está asignando el valor, si es cualquier otra expresión, se está evaluando o leyendo.
-	\item Las operaciones 'ADD', 'MULT', 'DIV', 'SUB' siempre son seguidas por dos expresiones, y se evaluan de izquierda a derecha.
+  \item El lenguaje obtenido fue el siguiente:
+  \item Las expresiones son leídas de izquierda a derecha.
+  \item Los objetos "STRINGS" comienzan con "B", con cada carácter separado por una 'b', y en orden inverso.
+  \item Los objetos "INTEGERS" comienzan con "N" y pueden formarse por una operación aritmética, donde cada elemento se separa por un operador: la 'a' es suma, la 'm' es multiplicación, la 'd' es división, y la 's' es resta.
+  \item La operación "PRINT" se indica con una 'P', y se imprime el valor de la siguiente expresión.
+  \item Las variables se declaran con una 'V', seguido de un nombre de variable, con cada carácter separado por una 'r' y en orden inverso. Si es precedida por un '=', se está asignando el valor, si es cualquier otra expresión, se está evaluando o leyendo.
+  \item Las operaciones 'ADD', 'MULT', 'DIV', 'SUB' siempre son seguidas por dos expresiones, y se evalúan de izquierda a derecha.
 \end{itemize}
 
-El interprete compienza haciendo un split de la entrada para separar cada expresión, para esto se uso una expresión regular que separara en los cambios a mayuscua, en los espacios, y en las operaciones. Para cada linea se invierte el orden, y se insertan a 
+El interprete comienza haciendo un split de la entrada para separar cada expresión, para esto se uso una expresión regular que separara en los cambios a mayúscula, en los espacios, y en las operaciones. Para cada línea se invierte el orden, y se insertan a
 una pila.
 
 Una vez se separan, empieza un ciclo que se repite hasta que la pila esté vacía. En cada iteración se saca un elemento de la pila, si es una operación, se sacan los dos elementos siguientes y se realiza la operación, se guarda el resultado en la pila. Si es una variable, se guarda en un diccionario con el nombre de la variable como llave. Si es un print, se imprime el siguiente elemento.
 
-Para las condiciones, se guarda cada condición individual en una pila y se evalua de izquierda a derecha. Despues se separan las intrucciones para el caso verdadero y la condición alternativa, si es que hay una, en un pila diferente. Una vez separadas, si se cumplio la condición, se iniica un ciclo de ejecución de la pila correspondiente, y sucede lo mismo si se cumple la comdición alterna. Las instrucciones pueden tener condiciones anidadas, por lo que al separar ambas ramas, se lleva un contador para saber en cual nivel de anidación se encuentra.
+Para las condiciones, se guarda cada condición individual en una pila y se evalúa de izquierda a derecha. Después se separan las instrucciones para el caso verdadero y la condición alternativa, si es que hay una, en un pila diferente. Una vez separadas, si se cumplió la condición, se inicia un ciclo de ejecución de la pila correspondiente, y sucede lo mismo si se cumple la condición alterna. Las instrucciones pueden tener condiciones anidadas, por lo que al separar ambas ramas, se lleva un contador para saber en cual nivel de anidación se encuentra.
 
-Los bucles fucnionan de una forma similar, se guarda la condicion en una pila, y se separan las instrucciones a ejecutar. Se crea un copdia de la pila de condicion y se evalua, de ser verdadera, se ejecuta el ciclo, haciendo una copia de las instrucciones a ejecutar, y se repite el proceso hasta que la condición sea falsa. Al tambien haber anidación, tambien se lleva un contador para saber en que nivel de anidación se encuentra.
+Los bucles funcionan de una forma similar, se guarda la condición en una pila, y se separan las instrucciones a ejecutar. Se crea un copia de la pila de condición y se evalúa, de ser verdadera, se ejecuta el ciclo, haciendo una copia de las instrucciones a ejecutar, y se repite el proceso hasta que la condición sea falsa. Al también haber anidación, también se lleva un contador para saber en que nivel de anidación se encuentra.
 
-
-Bandera: \{FLG:50M371m3Z\_350l4Ng\_c4N\_B3\_M0r3\_R34d4bL3\_7h4N\_1337\_Fl49z\}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{500.png}
-  \caption{}
+  \caption{Flag: \{FLG:50M371m3Z\_350l4Ng\_c4N\_B3\_M0r3\_R34d4bL3\_7h4N\_1337\_Fl49z\}}
 \end{figure}
+
+\section*{Soluciones en github}
+Las soluciones fueron subidas a github, se pueden consultar en el siguiente enlace: \url{https://github.com/juanQNav/Capture_the_flag/tree/main}
+
 \end{document}
